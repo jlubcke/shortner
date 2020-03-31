@@ -27,14 +27,22 @@ from shortner.views import (
     edit,
     create,
     delete,
+    login,
+    logout,
+    redirect_root,
 )
 
 urlpatterns = [
     # path('admin/', admin.site.urls),
-    path('admin/', include(ShortnerAdmin.urls())),
+    url(r'^$', redirect_root),
     url(r'^entries/$', entries),
     url(r'^entries/create/$', create),
     url(r'^entries/(?P<short>.+)/edit/$', edit),
     url(r'^entries/(?P<short>.+)/delete/$', delete),
     url(r'^s/(?P<short>.+)$', go),
+
+    url(r'^login/$', login),
+    url(r'^logout/$', logout),
+
+    path('admin/', include(ShortnerAdmin.urls())),
 ]
