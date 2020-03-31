@@ -9,3 +9,9 @@ class Entry(models.Model):
     url = models.CharField(max_length=255)
     short = models.CharField(max_length=255, unique=True)
     use_count = models.IntegerField(default=0)
+
+    class Meta:
+        verbose_name_plural = 'entries'
+
+    def get_absolute_url(self):
+        return f'/entries/{self.short}/'

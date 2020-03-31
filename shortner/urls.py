@@ -23,10 +23,18 @@ from django.urls import (
 from shortner.views import (
     ShortnerAdmin,
     go,
+    entries,
+    edit,
+    create,
+    delete,
 )
 
 urlpatterns = [
     # path('admin/', admin.site.urls),
     path('admin/', include(ShortnerAdmin.urls())),
-    url(r's/(?P<short>.+)', go)
+    url(r'^entries/$', entries),
+    url(r'^entries/create/$', create),
+    url(r'^entries/(?P<short>.+)/edit/$', edit),
+    url(r'^entries/(?P<short>.+)/delete/$', delete),
+    url(r'^s/(?P<short>.+)$', go),
 ]
