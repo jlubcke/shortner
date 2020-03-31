@@ -28,5 +28,5 @@ from shortner.views import (
 urlpatterns = [
     # path('admin/', admin.site.urls),
     path('admin/', include(ShortnerAdmin.urls())),
-    url(r'(?P<short>.+)', go)
+    url(r's/(?P<short>.+)', go)
 ]
