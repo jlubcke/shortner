@@ -30,32 +30,31 @@ class EntryTable(Table):
 
 
 class EntryAdminTable(EntryTable):
-    class Meta:
-        columns__edit = Column.edit(after=0)
-        columns__delete = Column.delete(after=0)
-
-
-def approve__post_handler(table, **_):
-    table.bulk_queryset().update(approver=table.get_request().user)
+    edit = Column.edit()
+    delete = Column.delete()
 
 
 class EntryApproveTable(EntryTable):
     class Meta:
         title = 'Approvable entries'
-        auto__rows = lambda table, **_: (
-            Entry.objects.exclude(
+        columns__select__include = True
+
+        @staticmethod
+        def auto__rows(table, **_):
+            return Entry.objects.exclude(
                 creator=table.get_request().user
             ).exclude(
                 approver__isnull=False,
             )
-        )
-        columns__select__include = True
 
         bulk__actions__submit = dict(
             include=True,
-            post_handler=approve__post_handler,
             attrs__value='Approve',
         )
+
+        @staticmethod
+        def bulk__actions__submit__post_handler(table, **_):
+            table.bulk_queryset().update(approver=table.get_request().user)
 
 
 @login_required

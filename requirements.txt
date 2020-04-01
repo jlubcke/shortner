@@ -1,3 +1,4 @@
 Django >= 3.0
-iommi >= 0.0.4
+iommi >= 0.0.5
+tri.declarative >= 5.3.0
 pip >= 20.0.0
