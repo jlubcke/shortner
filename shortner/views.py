@@ -1,19 +1,17 @@
 from django.contrib import auth
 from django.contrib.auth.decorators import login_required
-
 from django.http import HttpResponseRedirect
 from django.utils.safestring import mark_safe
 from iommi import (
+    Action,
     Column,
+    Field,
+    Form,
+    html,
     Page,
     Table,
-    html,
-    Form,
-    Action,
-    Field,
 )
 from iommi.admin import Admin
-from iommi.table import LAST
 
 from shortner.models import Entry
 
@@ -22,26 +20,28 @@ def redirect_root(request):
     return HttpResponseRedirect('/entries/')
 
 
-class EntryAdminTable(Table):
+class EntryTable(Table):
     class Meta:
         auto__model = Entry
         columns__short = dict(
             cell__url=lambda value, **_: f'/s/{value}',
-            after=0,
         )
-        columns__url__cell__url = lambda value, **_: value
-        columns__edit = Column.edit(after=LAST)
-        columns__delete = Column.delete(after=LAST)
+        columns__url__cell__url = (lambda value, **_: value)
+
+
+class EntryAdminTable(EntryTable):
+    class Meta:
+        columns__edit = Column.edit(after=0)
+        columns__delete = Column.delete(after=0)
 
 
 def approve__post_handler(table, **_):
     table.bulk_queryset().update(approver=table.get_request().user)
 
 
-class EntryApproveTable(Table):
+class EntryApproveTable(EntryTable):
     class Meta:
         title = 'Approvable entries'
-        auto__model = Entry
         auto__rows = lambda table, **_: (
             Entry.objects.exclude(
                 creator=table.get_request().user
@@ -52,8 +52,8 @@ class EntryApproveTable(Table):
         columns__select__include = True
 
         bulk__actions__submit = dict(
-            post_handler=approve__post_handler,
             include=True,
+            post_handler=approve__post_handler,
             attrs__value='Approve',
         )
 
@@ -119,7 +119,7 @@ def login(request):
 
 
 def on_post(form, **_):
-    if form.is_valid:
+    if form.is_valid():
         user = auth.authenticate(
             username=form.fields.username.value,
             password=form.fields.password.value,
