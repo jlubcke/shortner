@@ -2,6 +2,7 @@ from django.contrib import auth
 from django.contrib.auth.decorators import login_required
 
 from django.http import HttpResponseRedirect
+from django.utils.safestring import mark_safe
 from iommi import (
     Column,
     Page,
@@ -28,18 +29,45 @@ class EntryAdminTable(Table):
             cell__url=lambda value, **_: f'/s/{value}',
             after=0,
         )
-        columns__url__cell__url=lambda value, **_: value
+        columns__url__cell__url = lambda value, **_: value
         columns__edit = Column.edit(after=LAST)
         columns__delete = Column.delete(after=LAST)
 
 
+def approve__post_handler(table, **_):
+    table.bulk_queryset().update(approver=table.get_request().user)
+
+
+class EntryApproveTable(Table):
+    class Meta:
+        title = 'Approvable entries'
+        auto__model = Entry
+        auto__rows = lambda table, **_: (
+            Entry.objects.exclude(
+                creator=table.get_request().user
+            ).exclude(
+                approver__isnull=False,
+            )
+        )
+        columns__select__include = True
+
+        bulk__actions__submit = dict(
+            post_handler=approve__post_handler,
+            include=True,
+            attrs__value='Approve',
+        )
+
+
 @login_required
 def entries(request):
-    return EntryAdminTable(
-        actions=dict(
-            create=Action.button(tag='a', attrs__href='create'),
-            logout=Action.button(tag='a', attrs__href='/logout/'),
-        )
+    return Page(
+        parts__admin_table=EntryAdminTable(
+            actions=dict(
+                create=Action.button(tag='a', attrs__href='create'),
+                logout=Action.button(tag='a', attrs__href='/logout/'),
+            ),
+        ),
+        parts__approve_table=EntryApproveTable()
     )
 
 
@@ -84,7 +112,10 @@ def go(request, short):
 
 
 def login(request):
-    return LoginForm()
+    return Page(
+        parts__form=LoginForm(),
+        parts__set_focus=html.script(mark_safe('document.getElementById("id_username").focus();')),
+    )
 
 
 def on_post(form, **_):
@@ -107,6 +138,7 @@ class LoginForm(Form):
     password = Field.password()
 
     class Meta:
+        title = 'Login'
         actions__submit__post_handler = on_post
 
 
