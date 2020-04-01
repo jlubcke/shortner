@@ -83,11 +83,18 @@ class EntryAdminTable(EntryTable):
     edit = Column.edit()
     delete = Column.delete()
 
+    class Meta:
+        actions = dict(
+            create=Action.button(tag='a', attrs__href='create'),
+            logout=Action.button(tag='a', attrs__href='/logout/'),
+        )
+
 
 class EntryApproveTable(EntryTable):
+    select = Column.select()
+
     class Meta:
         title = 'Approvable entries'
-        columns__select__include = True
 
         @staticmethod
         def auto__rows(table, **_):
@@ -107,16 +114,34 @@ class EntryApproveTable(EntryTable):
             table.bulk_queryset().update(approver=table.get_request().user)
 
 
+class EntryUnapproveTable(EntryTable):
+    select = Column.select()
+
+    class Meta:
+        title = 'Approved entries'
+
+        @staticmethod
+        def auto__rows(table, **_):
+            return Entry.objects.filter(
+                approver=table.get_request().user
+            )
+
+        bulk__actions__submit = dict(
+            include=True,
+            attrs__value='Unpprove',
+        )
+
+        @staticmethod
+        def bulk__actions__submit__post_handler(table, **_):
+            table.bulk_queryset().update(approver=None)
+
+
 @login_required
 def entries(request):
     return Page(
-        parts__admin_table=EntryAdminTable(
-            actions=dict(
-                create=Action.button(tag='a', attrs__href='create'),
-                logout=Action.button(tag='a', attrs__href='/logout/'),
-            ),
-        ),
-        parts__approve_table=EntryApproveTable()
+        parts__admin_table=EntryAdminTable(),
+        parts__approve_table=EntryApproveTable(),
+        parts__unapprove_table=EntryUnapproveTable(),
     )
 
 
