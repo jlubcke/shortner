@@ -94,12 +94,12 @@ def on_post(form, **_):
             password=form.fields.password.value,
         )
 
-        if user is None:
-            form.errors.add('Unknown username or password')
+        if user is not None:
+            request = form.get_request()
+            auth.login(request, user)
+            return HttpResponseRedirect(request.GET.get('next', '/'))
 
-        request = form.get_request()
-        auth.login(request, user)
-        return HttpResponseRedirect(request.GET.get('next', '/'))
+        form.errors.add('Unknown username or password')
 
 
 class LoginForm(Form):
