@@ -16,8 +16,58 @@ from iommi.admin import Admin
 from shortner.models import Entry
 
 
+class LoginForm(Form):
+    username = Field()
+    password = Field.password()
+
+    class Meta:
+        title = 'Login'
+
+        @staticmethod
+        def actions__submit__post_handler(form, **_):
+            if form.is_valid():
+                user = auth.authenticate(
+                    username=form.fields.username.value,
+                    password=form.fields.password.value,
+                )
+
+                if user is not None:
+                    request = form.get_request()
+                    auth.login(request, user)
+                    return HttpResponseRedirect(request.GET.get('next', '/'))
+
+                form.errors.add('Unknown username or password')
+
+
+def login(request):
+    return Page(
+        parts__form=LoginForm(),
+        parts__set_focus=html.script(mark_safe('document.getElementById("id_username").focus();')),
+    )
+
+
+def logout(request):
+    auth.logout(request)
+    return HttpResponseRedirect('/login/')
+
+
 def redirect_root(request):
     return HttpResponseRedirect('/entries/')
+
+
+def go(request, short):
+    entry = Entry.objects.get(short=short)
+
+    if not entry.approver:
+        class ErrorPage(Page):
+            header = html.h1('Not approved yet...')
+
+        return ErrorPage()
+
+    entry.use_count += 1
+    entry.save(update_fields=['use_count'])
+
+    return HttpResponseRedirect(entry.url)
 
 
 class EntryTable(Table):
@@ -93,57 +143,6 @@ def delete(request, short):
     return Form.delete(
         auto__instance=Entry.objects.get(short=short),
     )
-
-
-def go(request, short):
-    entry = Entry.objects.get(short=short)
-
-    if not entry.approver:
-        class ErrorPage(Page):
-            header = html.h1('Not approved yet...')
-
-        return ErrorPage()
-
-    entry.use_count += 1
-    entry.save(update_fields=['use_count'])
-
-    return HttpResponseRedirect(entry.url)
-
-
-def login(request):
-    return Page(
-        parts__form=LoginForm(),
-        parts__set_focus=html.script(mark_safe('document.getElementById("id_username").focus();')),
-    )
-
-
-def on_post(form, **_):
-    if form.is_valid():
-        user = auth.authenticate(
-            username=form.fields.username.value,
-            password=form.fields.password.value,
-        )
-
-        if user is not None:
-            request = form.get_request()
-            auth.login(request, user)
-            return HttpResponseRedirect(request.GET.get('next', '/'))
-
-        form.errors.add('Unknown username or password')
-
-
-class LoginForm(Form):
-    username = Field()
-    password = Field.password()
-
-    class Meta:
-        title = 'Login'
-        actions__submit__post_handler = on_post
-
-
-def logout(request):
-    auth.logout(request)
-    return HttpResponseRedirect('/login/')
 
 
 class ShortnerAdmin(Admin):

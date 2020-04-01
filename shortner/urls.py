@@ -14,35 +14,35 @@ Including another URLconf
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
 from django.conf.urls import url
-from django.contrib import admin
 from django.urls import (
-    path,
     include,
+    path,
 )
 
 from shortner.views import (
-    ShortnerAdmin,
-    go,
-    entries,
-    edit,
     create,
     delete,
+    edit,
+    entries,
+    go,
     login,
     logout,
     redirect_root,
+    ShortnerAdmin,
 )
 
 urlpatterns = [
-    # path('admin/', admin.site.urls),
+    url(r'^login/$', login),
+    url(r'^logout/$', logout),
+
     url(r'^$', redirect_root),
+
+    url(r'^s/(?P<short>.+)$', go),
+
     url(r'^entries/$', entries),
     url(r'^entries/create/$', create),
     url(r'^entries/(?P<short>.+)/edit/$', edit),
     url(r'^entries/(?P<short>.+)/delete/$', delete),
-    url(r'^s/(?P<short>.+)$', go),
-
-    url(r'^login/$', login),
-    url(r'^logout/$', logout),
 
     path('admin/', include(ShortnerAdmin.urls())),
 ]
