@@ -125,4 +125,3 @@ STATIC_URL = '/static/'
 LOGIN_URL = '/login/'
 
 IOMMI_DEFAULT_STYLE = 'semantic_ui'
-IOMMI_BASE_TEMPLATE = 'iommi/base_semantic_ui.html'

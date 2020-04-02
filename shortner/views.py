@@ -42,7 +42,9 @@ class LoginForm(Form):
 def login(request):
     return Page(
         parts__form=LoginForm(),
-        parts__set_focus=html.script(mark_safe('document.getElementById("id_username").focus();')),
+        parts__set_focus=html.script(mark_safe(
+            'document.getElementById("id_username").focus();',
+        )),
     )
 
 
@@ -128,7 +130,7 @@ class EntryUnapproveTable(EntryTable):
 
         bulk__actions__submit = dict(
             include=True,
-            attrs__value='Unpprove',
+            attrs__value='Unapprove',
         )
 
         @staticmethod
