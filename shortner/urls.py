@@ -29,6 +29,8 @@ from shortner.views import (
     logout,
     redirect_root,
     ShortnerAdmin,
+    submit,
+    thanks,
 )
 
 urlpatterns = [
@@ -38,6 +40,9 @@ urlpatterns = [
     url(r'^$', redirect_root),
 
     url(r'^s/(?P<short>.+)$', go),
+
+    url(r'^submit/$', submit),
+    url(r'^thanks/(?P<short>.+)$', thanks),
 
     url(r'^entries/$', entries),
     url(r'^entries/create/$', create),

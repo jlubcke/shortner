@@ -7,7 +7,7 @@ class Entry(models.Model):
     short = models.CharField(max_length=255, unique=True)
     url = models.CharField(max_length=255)
     title = models.CharField(max_length=255)
-    creator = models.ForeignKey(settings.AUTH_USER_MODEL, related_name='entries', on_delete=models.CASCADE)
+    creator = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, related_name='entries', on_delete=models.CASCADE)
     approver = models.ForeignKey(settings.AUTH_USER_MODEL, related_name='approvals', on_delete=models.CASCADE, null=True)
     created_at = models.DateTimeField()
     valid_to = models.DateTimeField()

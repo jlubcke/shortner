@@ -1,3 +1,5 @@
+import random
+import string
 from datetime import (
     datetime,
     timedelta,
@@ -49,22 +51,76 @@ class LoginForm(Form):
                 form.errors.add('Unknown username or password')
 
 
+class LoginPage(Page):
+    form = LoginForm()
+    set_focus = html.script(mark_safe(
+        'document.getElementById("id_username").focus();',
+    ))
+
+
 def login(request):
-    return Page(
-        parts__form=LoginForm(),
-        parts__set_focus=html.script(mark_safe(
-            'document.getElementById("id_username").focus();',
-        )),
-    )
+    return LoginPage()
 
 
 def logout(request):
     auth.logout(request)
-    return HttpResponseRedirect('/login/')
+    return HttpResponseRedirect('/')
 
 
 def redirect_root(request):
-    return HttpResponseRedirect('/entries/')
+    return HttpResponseRedirect('/submit/')
+
+
+def random_short():
+    return ''.join(random.choices(string.ascii_lowercase + string.digits, k=6))
+
+
+def submit(request):
+    class SubmitForm(Form):
+        short = Field(
+            initial=random_short(),
+            is_valid=lambda parsed_data, **_: (
+                not Entry.objects.filter(short=parsed_data.strip()).exists(),
+                'Short name already in use'
+            )
+        )
+        url = Field(
+            is_valid=lambda parsed_data, **_: (
+                not Entry.objects.filter(url=parsed_data.strip()).exists(),
+                'URL already submitted'
+            )
+        )
+
+        class Meta:
+            @staticmethod
+            def actions__submit__post_handler(form, **_):
+                if form.is_valid():
+                    entry = Entry(
+                        short=form.fields.short.value,
+                        url=form.fields.url.value,
+                        created_at=timezone.now(),
+                        valid_to=timezone.now() + timedelta(days=30),
+                    )
+                    entry.save()
+                    return HttpResponseRedirect(f'/thanks/{entry.short}')
+
+    class SubmitPage(Page):
+        heading = html.h1('TriOptima URL Blessalizer')
+        form = SubmitForm()
+        set_focus = html.script(mark_safe(
+            'document.getElementById("id_url").focus();',
+        ))
+        admin = html.p(html.a('Admin', attrs__href='/entries'), ' (requires login)')
+
+    return SubmitPage()
+
+
+def thanks(request, short):
+    return html.div(
+        html.h1('Thank you for submitting an URL'),
+        html.p('Processing...'),
+        html.a('Submit another', attrs__href='/submit/')
+    )
 
 
 def go(request, short):
