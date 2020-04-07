@@ -107,6 +107,7 @@ class EntryTable(Table):
             return timeuntil(value)
 
         columns__valid_to__display_name = 'Valid for'
+
         @staticmethod
         def columns__valid_to__cell__attrs__title(value, **_):
             return str(value)
@@ -172,9 +173,11 @@ class EntryUnapproveTable(EntryTable):
 @login_required
 def entries(request):
     return Page(
-        parts__admin_table=EntryAdminTable(),
-        parts__approve_table=EntryApproveTable(),
-        parts__unapprove_table=EntryUnapproveTable(),
+        parts=dict(
+            admin_table=EntryAdminTable(),
+            approve_table=EntryApproveTable(),
+            unapprove_table=EntryUnapproveTable(),
+        )
     )
 
 
@@ -182,14 +185,16 @@ def entries(request):
 def create(request):
     return Form.create(
         auto__model=Entry,
-        fields__creator__initial=request.user,
-        fields__use_count__include=False,
-        fields__approver__include=False,
-        fields__created_at=dict(
-            editable=False,
-            initial=datetime.now()
-        ),
-        fields__valid_to__initial=timezone.now() + timedelta(days=30),
+        fields=dict(
+            creator__initial=request.user,
+            use_count__include=False,
+            approver__include=False,
+            created_at=dict(
+                editable=False,
+                initial=datetime.now()
+            ),
+            valid_to__initial=timezone.now() + timedelta(days=30),
+        )
     )
 
 
@@ -197,9 +202,11 @@ def create(request):
 def edit(request, short):
     return Form.edit(
         auto__instance=Entry.objects.get(short=short),
-        fields__creator__editable=False,
-        fields__use_count__editable=False,
-        fields__created_at__editable=False,
+        fields=dict(
+            creator__editable=False,
+            use_count__editable=False,
+            created_at__editable=False,
+        )
     )
 
 
