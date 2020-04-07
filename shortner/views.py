@@ -99,7 +99,7 @@ class EntryApproveTable(EntryTable):
         title = 'Approvable entries'
 
         @staticmethod
-        def auto__rows(table, **_):
+        def rows(table, **_):
             return Entry.objects.exclude(
                 creator=table.get_request().user
             ).exclude(
@@ -123,7 +123,7 @@ class EntryUnapproveTable(EntryTable):
         title = 'Approved entries'
 
         @staticmethod
-        def auto__rows(table, **_):
+        def rows(table, **_):
             return Entry.objects.filter(
                 approver=table.get_request().user
             )

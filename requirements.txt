@@ -1,5 +1,4 @@
 Django >= 3.0
-iommi >= 0.0.5
-# -e git+https://github.com/TriOptima/iommi.git@master#egg=iommi
+-e git+https://github.com/TriOptima/iommi.git@master#egg=iommi
 tri.declarative >= 5.3.0
 pip >= 20.0.0
