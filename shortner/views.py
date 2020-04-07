@@ -1,7 +1,17 @@
+from datetime import (
+    datetime,
+    timedelta,
+)
+
 from django.contrib import auth
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponseRedirect
+from django.utils import timezone
 from django.utils.safestring import mark_safe
+from django.utils.timesince import (
+    timesince,
+    timeuntil,
+)
 from iommi import (
     Action,
     Column,
@@ -60,7 +70,7 @@ def redirect_root(request):
 def go(request, short):
     entry = Entry.objects.get(short=short)
 
-    if not entry.approver:
+    if not entry.is_valid():
         class ErrorPage(Page):
             header = html.h1('Not approved yet...')
 
@@ -79,6 +89,27 @@ class EntryTable(Table):
             cell__url=lambda value, **_: f'/s/{value}',
         )
         columns__url__cell__url = (lambda value, **_: value)
+
+        @staticmethod
+        def columns__created_at__cell__format(value, **_):
+            return timesince(value)
+
+        columns__created_at__display_name = 'Age'
+
+        @staticmethod
+        def columns__created_at__cell__attrs__title(value, **_):
+            return str(value)
+
+        @staticmethod
+        def columns__valid_to__cell__format(value, **_):
+            if value < timezone.now():
+                return 'No longer valid'
+            return timeuntil(value)
+
+        columns__valid_to__display_name = 'Valid for'
+        @staticmethod
+        def columns__valid_to__cell__attrs__title(value, **_):
+            return str(value)
 
 
 class EntryAdminTable(EntryTable):
@@ -154,6 +185,11 @@ def create(request):
         fields__creator__initial=request.user,
         fields__use_count__include=False,
         fields__approver__include=False,
+        fields__created_at=dict(
+            editable=False,
+            initial=datetime.now()
+        ),
+        fields__valid_to__initial=timezone.now() + timedelta(days=30),
     )
 
 
@@ -161,7 +197,9 @@ def create(request):
 def edit(request, short):
     return Form.edit(
         auto__instance=Entry.objects.get(short=short),
+        fields__creator__editable=False,
         fields__use_count__editable=False,
+        fields__created_at__editable=False,
     )
 
 
