@@ -15,3 +15,7 @@ runserver: venv
 	venv/bin/python manage.py migrate
 	venv/bin/python manage.py runserver
 
+.PHONY : lint
+lint: venv
+	venv/bin/python -m pip install flake8
+	venv/bin/python -m flake8
