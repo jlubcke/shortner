@@ -21,6 +21,6 @@ class Entry(models.Model):
 
     def is_valid(self):
         return (
-            self.valid_to < timezone.now()
+            self.valid_to > timezone.now()
             and self.approver is not None
         )
