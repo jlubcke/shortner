@@ -5,7 +5,6 @@ import re
 from setuptools import setup, find_packages, Command
 
 readme = open('README.rst').read()
-history = open('HISTORY.rst').read().replace('.. :changelog:', '')
 
 
 def read_reqs(name):
@@ -71,13 +70,14 @@ setup(
     name='shortner',
     version=read_version(),
     description='Shortner is a small django app to keep track of external URLs that have been blessed and shortened.',
-    long_description=readme + '\n\n' + history,
+    long_description=readme,
     author='Johan Lübcke',
     author_email='johan.lubcke@trioptima.com',
     url='https://github.com/jlubcke/shortner',
-    packages=find_packages('.'),
+    packages=['shortner'],
     include_package_data=True,
-    install_requires=read_reqs('requirements.txt'),
+    # install_requires=read_reqs('requirements.txt'),
+    install_requires=['django', 'iommi', 'tri.declarative'],
     license="BSD",
     zip_safe=False,
     keywords='shortner,django,iommi',

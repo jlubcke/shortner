@@ -14,7 +14,8 @@ ALL: runserver
 .PHONY: clean
 clean:
 	find . -name *.pyc -delete
-	rm -rf venv
+	find . -name __pycache__ -type d -delete
+	rm -rf venv build
 
 venv:
 	python3 -m virtualenv venv
