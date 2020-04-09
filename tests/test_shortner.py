@@ -41,14 +41,19 @@ def test_submit(client):
     assert entry.short == short
 
 
-def test_not_yet_approved(client):
-    Entry(
+@pytest.fixture
+def fresh_entry():
+    entry = Entry(
         short='short',
         url='http://foo.bar/boink',
         created_at=timezone.now(),
         valid_to=timezone.now() + timedelta(days=30),
-    ).save()
+    )
+    entry.save()
+    return entry
 
+
+def test_not_yet_approved(client, fresh_entry):
     response = client.get(reverse(go, args=dict(short='short')))
     assert 'Not approved yet...' in response.content.decode()
 
@@ -63,14 +68,25 @@ def admin():
     )
 
 
-def test_approved(client, admin):
-    Entry(
-        short='short',
-        url='http://foo.bar/boink',
-        approver=admin,
-        created_at=timezone.now(),
-        valid_to=timezone.now() + timedelta(days=30),
-    ).save()
+@pytest.fixture
+def approved_entry(fresh_entry, admin):
+    fresh_entry.approver = admin
+    fresh_entry.save()
+    return fresh_entry
 
+
+def test_approved(client, approved_entry, admin):
     response = client.get(reverse(go, args=dict(short='short')))
-    assert 'Not approved yet...' not in response.content.decode()
+    assert response.status_code == 302
+    assert response.url == approved_entry.url
+
+
+@pytest.fixture
+def no_longer_approved_entry(approved_entry, admin):
+    approved_entry.valid_to = timezone.now() - timedelta(days=5)
+    approved_entry.save()
+
+
+def test_no_longer_approved(client, no_longer_approved_entry):
+    response = client.get(reverse(go, args=dict(short='short')))
+    assert 'Not approved yet...' in response.content.decode()

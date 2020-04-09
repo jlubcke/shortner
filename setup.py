@@ -82,7 +82,7 @@ setup(
     zip_safe=False,
     keywords='shortner,django,iommi',
     classifiers=[
-        'Development Status :: 4 - Beta',
+        'Development Status :: 3 - Alpha',
         'Intended Audience :: Developers',
         'License :: OSI Approved :: BSD License',
         'Natural Language :: English',
