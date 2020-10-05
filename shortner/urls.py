@@ -13,7 +13,6 @@ Including another URLconf
     1. Import the include() function: from django.urls import include, path
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
-from django.conf.urls import url
 from django.urls import (
     include,
     path,
@@ -25,8 +24,6 @@ from shortner.views import (
     edit,
     entries,
     go,
-    login,
-    logout,
     redirect_root,
     ShortnerAdmin,
     submit,
@@ -34,20 +31,17 @@ from shortner.views import (
 )
 
 urlpatterns = [
-    url(r'^login/$', login),
-    url(r'^logout/$', logout),
+    path('', redirect_root),
 
-    url(r'^$', redirect_root),
+    path('s/<short>', go),
 
-    url(r'^s/(?P<short>.+)$', go),
+    path('submit/', submit),
+    path('thanks/<short>', thanks),
 
-    url(r'^submit/$', submit),
-    url(r'^thanks/(?P<short>.+)$', thanks),
-
-    url(r'^entries/$', entries),
-    url(r'^entries/create/$', create),
-    url(r'^entries/(?P<short>.+)/edit/$', edit),
-    url(r'^entries/(?P<short>.+)/delete/$', delete),
+    path('entries/', entries),
+    path('entries/create/', create),
+    path('entries/<short>/edit/', edit),
+    path('entries/<short>/delete/', delete),
 
     path('admin/', include(ShortnerAdmin.urls())),
 ]

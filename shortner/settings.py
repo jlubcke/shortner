@@ -122,6 +122,6 @@ USE_TZ = True
 
 STATIC_URL = '/static/'
 
-LOGIN_URL = '/login/'
+LOGIN_URL = '/admin/login/'
 
 IOMMI_DEFAULT_STYLE = 'semantic_ui'

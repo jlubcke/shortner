@@ -5,9 +5,9 @@ from datetime import (
     timedelta,
 )
 
-from django.contrib import auth
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponseRedirect
+from django.urls import reverse
 from django.utils import timezone
 from django.utils.safestring import mark_safe
 from django.utils.timesince import (
@@ -23,48 +23,12 @@ from iommi import (
     Page,
     Table,
 )
-from iommi.admin import Admin
+from iommi.admin import (
+    Admin,
+    Auth,
+)
 
 from shortner.models import Entry
-
-
-class LoginForm(Form):
-    username = Field()
-    password = Field.password()
-
-    class Meta:
-        title = 'Login'
-
-        @staticmethod
-        def actions__submit__post_handler(form, **_):
-            if form.is_valid():
-                user = auth.authenticate(
-                    username=form.fields.username.value,
-                    password=form.fields.password.value,
-                )
-
-                if user is not None:
-                    request = form.get_request()
-                    auth.login(request, user)
-                    return HttpResponseRedirect(request.GET.get('next', '/'))
-
-                form.errors.add('Unknown username or password')
-
-
-class LoginPage(Page):
-    form = LoginForm()
-    set_focus = html.script(mark_safe(
-        'document.getElementById("id_username").focus();',
-    ))
-
-
-def login(request):
-    return LoginPage()
-
-
-def logout(request):
-    auth.logout(request)
-    return HttpResponseRedirect('/')
 
 
 def redirect_root(request):
@@ -176,7 +140,7 @@ class EntryAdminTable(EntryTable):
     class Meta:
         actions = dict(
             create=Action.button(tag='a', attrs__href='create'),
-            logout=Action.button(tag='a', attrs__href='/logout/'),
+            logout=Action.button(tag='a', attrs__href=lambda **_: reverse(Auth.logout)),
         )
 
 
