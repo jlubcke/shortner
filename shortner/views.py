@@ -15,11 +15,12 @@ from django.utils.timesince import (
     timeuntil,
 )
 from iommi import (
-    Action,
     Column,
     Field,
     Form,
     html,
+    Menu,
+    MenuItem,
     Page,
     Table,
 )
@@ -105,6 +106,7 @@ def go(request, short):
 class EntryTable(Table):
     class Meta:
         auto__model = Entry
+        bulk__title = ''
         columns__short = dict(
             cell__url=lambda value, **_: f'/s/{value}',
         )
@@ -136,12 +138,6 @@ class EntryTable(Table):
 class EntryAdminTable(EntryTable):
     edit = Column.edit()
     delete = Column.delete()
-
-    class Meta:
-        actions = dict(
-            create=Action.button(tag='a', attrs__href='create'),
-            logout=Action.button(tag='a', attrs__href=lambda **_: reverse(Auth.logout)),
-        )
 
 
 class EntryApproveTable(EntryTable):
@@ -190,9 +186,38 @@ class EntryUnapproveTable(EntryTable):
             table.bulk_queryset().update(approver=None)
 
 
+def menu():
+    return Menu(
+        sub_menu=dict(
+            root=MenuItem(
+                display_name='Home',
+                url=lambda **_: reverse(entries),
+            ),
+            new=MenuItem(
+                display_name='New entry',
+                url=lambda **_: reverse(create),
+            ),
+            admin=MenuItem(
+                display_name='Admin',
+                url=lambda **_: reverse(ShortnerAdmin.all_models),
+            ),
+            change_password=MenuItem(
+                url=lambda **_: reverse(Auth.change_password),
+            ),
+            logout=MenuItem(
+                url=lambda **_: reverse(Auth.logout),
+            ),
+        ),
+    )
+
+
+class AdminPage(Page):
+    menu = menu()
+
+
 @login_required
 def entries(request):
-    return Page(
+    return AdminPage(
         parts=dict(
             admin_table=EntryAdminTable(),
             approve_table=EntryApproveTable(),
@@ -203,37 +228,43 @@ def entries(request):
 
 @login_required
 def create(request):
-    return Form.create(
-        auto__model=Entry,
-        fields=dict(
-            creator__initial=request.user,
-            use_count__include=False,
-            approver__include=False,
-            created_at=dict(
-                editable=False,
-                initial=datetime.now()
-            ),
-            valid_to__initial=timezone.now() + timedelta(days=30),
+    return AdminPage(
+        parts__form=Form.create(
+            auto__model=Entry,
+            fields=dict(
+                creator__initial=request.user,
+                use_count__include=False,
+                approver__include=False,
+                created_at=dict(
+                    editable=False,
+                    initial=datetime.now()
+                ),
+                valid_to__initial=timezone.now() + timedelta(days=30),
+            )
         )
     )
 
 
 @login_required
 def edit(request, short):
-    return Form.edit(
-        auto__instance=Entry.objects.get(short=short),
-        fields=dict(
-            creator__editable=False,
-            use_count__editable=False,
-            created_at__editable=False,
+    return AdminPage(
+        parts__form=Form.edit(
+            auto__instance=Entry.objects.get(short=short),
+            fields=dict(
+                creator__editable=False,
+                use_count__editable=False,
+                created_at__editable=False,
+            )
         )
     )
 
 
 @login_required
 def delete(request, short):
-    return Form.delete(
-        auto__instance=Entry.objects.get(short=short),
+    return AdminPage(
+        parts__form=Form.delete(
+            auto__instance=Entry.objects.get(short=short),
+        )
     )
 
 
@@ -243,3 +274,5 @@ class ShortnerAdmin(Admin):
             cell__url=lambda value, **_: f'/s/{value}',
             after=0,
         )
+
+    menu = menu()
